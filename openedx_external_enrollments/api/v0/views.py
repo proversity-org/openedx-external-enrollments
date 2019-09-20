@@ -47,6 +47,8 @@ class ExternalEnrollment(APIView):
         token = self.get_auth_token()
         if token:
             json_response = self.enroll_in_course(token, data)
+        else:
+            logging.info("None is an Invalid token")
 
         return JsonResponse(json_response, status=status.HTTP_200_OK, safe=False)
 
@@ -74,11 +76,15 @@ class ExternalEnrollment(APIView):
         headers = {"Authorization": token, "Accept": "application/json", "Content-Type": "application/json"}
 
         try:
+            logging.info('calling enrollment edx with: %s', data)
             response = requests.post(url, headers=headers, json=[data])
             if response.ok:
                 data = response.json()
-                logging.info("success external enrollment")
+                logging.info("edX success external enrollment - data %s", data)
                 return data
+            else:
+                logging.error("Error calling edX external enrollment: %s - %s", response.json(), response.reason)
+
         except Exception as e:
             logging.error("Failed to enroll in external course: " + str(data["course_run_id"]))
             logging.error("Reason: " + str(e))
