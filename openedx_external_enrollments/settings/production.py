@@ -18,3 +18,11 @@ def plugin_settings(settings):
         'EDX_ENTERPRISE_API_CLIENT_SECRET',
         settings.EDX_ENTERPRISE_API_CLIENT_SECRET
     )
+    settings.EDX_ENTERPRISE_API_CUSTOMER_UUID = getattr(settings, 'ENV_TOKENS', {}).get(
+        'EDX_ENTERPRISE_API_CUSTOMER_UUID',
+        settings.EDX_ENTERPRISE_API_CUSTOMER_UUID
+    )
+    settings.EDX_ENTERPRISE_API_CATALOG_UUID = getattr(settings, 'ENV_TOKENS', {}).get(
+        'EDX_ENTERPRISE_API_CATALOG_UUID',
+        settings.EDX_ENTERPRISE_API_CATALOG_UUID
+    )
