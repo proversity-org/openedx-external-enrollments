@@ -47,5 +47,5 @@ def plugin_settings(settings):
     settings.EDX_ENTERPRISE_API_CLIENT_SECRET = "client-secret"
     settings.EDX_ENTERPRISE_API_TOKEN_URL = "https://api.edx.org/oauth2/v1/access_token"
     settings.EDX_ENTERPRISE_API_BASE_URL = "https://api.edx.org/enterprise/v1"
-    settings.EDX_ENTERPRISE_API_CUSTOMER_UUID = "a3554467-071a-46b1-9971-e763879ce390"
-    settings.EDX_ENTERPRISE_API_CATALOG_UUID = "fba82d04-c4a4-4900-a661-c95a41d7fd1c"
+    settings.EDX_ENTERPRISE_API_CUSTOMER_UUID = "customer-id"
+    settings.EDX_ENTERPRISE_API_CATALOG_UUID = "catalog-id"

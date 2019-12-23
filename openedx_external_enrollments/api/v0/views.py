@@ -49,12 +49,20 @@ class ExternalEnrollment(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Getting the corresponding enrollment controller
-        enrollment_controller = ExternalEnrollmentFactory.get_enrollment_controller(
-            course.other_course_settings.get("external_platform_target")
-        )
-        # Now, let's try to execute the enrollment
-        response, request_status = enrollment_controller._post_enrollment(request.data, course.other_course_settings)
+        try:
+            # Getting the corresponding enrollment controller
+            enrollment_controller = ExternalEnrollmentFactory.get_enrollment_controller(
+                course.other_course_settings.get("external_platform_target")
+            )
+        except Exception:
+            LOG.info('Course [%s] not configured as external', request.data.get("course_id"))
+            return JsonResponse(
+                {"info": "Course {} not configured as external".format(request.data.get("course_id"))},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # Now, let's try to execute the enrollment
+            response, request_status = enrollment_controller._post_enrollment(request.data, course.other_course_settings)
 
         return JsonResponse(response, status=request_status, safe=False)
 
