@@ -13,4 +13,10 @@ urlpatterns = [
         views.ExternalEnrollment.as_view(),
         name='external-enrollment',
     ),
+    url(
+        r'^salesforce-enrollment$',
+        views.SalesforceEnrollmentView.as_view(),
+        name='salesforce-enrollment',
+    ),
+
 ]
