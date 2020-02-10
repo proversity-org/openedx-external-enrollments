@@ -6,6 +6,7 @@ import requests
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 import logging
+from celery import task
 from collections import OrderedDict
 
 from django.conf import settings
@@ -107,10 +108,15 @@ class SalesforceEnrollmentView(APIView):
                 status=status.HTTP_200_OK,
             )
         else:
-            # Now, let's try to execute the enrollment
-            response, request_status = enrollment_controller._post_enrollment(request.data)
-
-        return JsonResponse(response, status=request_status, safe=False)
+            # Now, let's try to call the asynchronous enrollment
+            generate_salesforce_enrollment.delay(
+                request.data
+            )
+            return JsonResponse(
+                {"info": "Salesforce enrollment request sent..."},
+                status=status.HTTP_200_OK,
+                safe=False,
+            )
 
 
 class BaseExternalEnrollment(object):
@@ -458,3 +464,23 @@ class ExternalEnrollmentFactory:
             return EdxInstanceExternalEnrollment()
         else:
             return EdxEnterpriseExternalEnrollment()
+
+
+@task(default_retry_delay=5, max_retries=5)  # pylint: disable=not-callable
+def generate_salesforce_enrollment(data, *args, **kwargs):
+    """
+    Handles the enrollment process at Salesforce.
+    Args:
+        data: request data
+    """
+
+    try:
+        # Getting the corresponding enrollment controller
+        enrollment_controller = SalesforceEnrollment()
+    except Exception:
+        pass
+    else:
+        # Calling the controller enrollment method
+        response, request_status = enrollment_controller._post_enrollment(data)
+
+    return
