@@ -1,14 +1,16 @@
 """
 This file contains the views for openedx-external-enrollments API.
 """
+import datetime
 import requests
-import json
+from oauthlib.oauth2 import BackendApplicationClient
+from requests_oauthlib import OAuth2Session
 import logging
+from celery import task
 from collections import OrderedDict
 
 from django.conf import settings
 from django.http import JsonResponse
-from django.contrib.auth.models import User
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import permissions, status
 from rest_framework.views import APIView
@@ -21,6 +23,7 @@ from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensio
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import (
     get_api_key_permission,
 )
+from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 from student.models import get_user
 
 LOG = logging.getLogger(__name__)
@@ -79,26 +82,63 @@ class ExternalEnrollment(APIView):
         return course
 
 
+class SalesforceEnrollmentView(APIView):
+
+    authentication_classes = [
+        get_jwt_authentication(),
+        OAuth2Authentication,
+    ]
+    permission_classes = [
+        get_api_key_permission(),
+    ]
+
+    def post(self, request):
+        """
+        View to execute enrollments in salesforce.
+        """
+        response = {}
+
+        try:
+            # Getting the corresponding enrollment controller
+            enrollment_controller = SalesforceEnrollment()
+        except Exception:
+            LOG.info("Can't instantiate Salesforce enrollment controller")
+            return JsonResponse(
+                {"info": "Can't instantiate Salesforce enrollment controller"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # Now, let's try to call the asynchronous enrollment
+            generate_salesforce_enrollment.delay(
+                request.data
+            )
+            return JsonResponse(
+                {"info": "Salesforce enrollment request sent..."},
+                status=status.HTTP_200_OK,
+                safe=False,
+            )
+
+
 class BaseExternalEnrollment(object):
     """
     """
-    def _execute_post(self, url, data=None, headers=None, json=None):
+    def _execute_post(self, url, data=None, headers=None, json_data=None):
         """
         """
         response = requests.post(
             url=url,
             data=data,
             headers=headers,
-            json=json,
+            json=json_data,
         )
         return response
 
-    def _post_enrollment(self, data, course_settings):
+    def _post_enrollment(self, data, course_settings=None):
         """
         """
         url = self._get_enrollment_url(course_settings)
-        json = self._get_enrollment_data(data, course_settings)
-        LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), json)
+        json_data = self._get_enrollment_data(data, course_settings)
+        LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), json_data)
         LOG.info('calling enrollment for [%s] with url: %s', self.__str__(), url)
         LOG.info('calling enrollment for [%s] with course settings: %s', self.__str__(), course_settings)
 
@@ -106,7 +146,7 @@ class BaseExternalEnrollment(object):
             response = self._execute_post(
                 url=url,
                 headers=self._get_enrollment_headers(),
-                json=json,
+                json_data=json_data,
             )
         except Exception as error:
             LOG.error("Failed to complete enrollment. Reason: "+ str(error))
@@ -212,6 +252,206 @@ class EdxInstanceExternalEnrollment(BaseExternalEnrollment):
         return course_settings.get("external_enrollment_api_url")
 
 
+class SalesforceEnrollment(BaseExternalEnrollment):
+
+    def __str__(self):
+        return "salesforce"
+
+    @staticmethod
+    def _get_course(course_id):
+        """
+        Return a course object.
+        """
+        if not course_id:
+            return None
+
+        course_key = CourseKey.from_string(course_id)
+        course = get_course_by_id(course_key)
+        return course
+
+    def _get_enrollment_headers(self):
+        token = self._get_auth_token()
+        return {
+            "Content-Type": "application/json",
+            "Authorization": "{} {}".format(
+                token.get("token_type"),
+                token.get("access_token"),
+            )
+        }
+
+    @staticmethod
+    def _get_auth_token():
+        """
+
+        :return:
+        """
+        request_params = {
+            'client_id': settings.SALESFORCE_API_CLIENT_ID,
+            'client_secret': settings.SALESFORCE_API_CLIENT_SECRET,
+            'username': settings.SALESFORCE_API_USERNAME,
+            'password': settings.SALESFORCE_API_PASSWORD,
+            'grant_type': 'password',
+        }
+        client = BackendApplicationClient(**request_params)
+        oauth = OAuth2Session(client=client)
+        oauth.params = request_params
+        token = oauth.fetch_token(
+            token_url=settings.SALESFORCE_API_TOKEN_URL,
+        )
+
+        return token
+
+    @staticmethod
+    def _get_openedx_user(data):
+        """
+
+        :param data:
+        :return:
+        """
+        user = {}
+        order_lines = data.get("supported_lines")
+        if order_lines:
+            try:
+                email = order_lines[0].get("user_email")
+                openedx_user, openedx_profile = get_user(email=email)
+                # TODO do not force logic assuming names with 2 words
+                first_name, last_name = openedx_profile.name.split(" ", 1)
+                user["FirstName"] = first_name.strip(" ")
+                user["LastName"] = last_name.strip(" ")
+                user["Email"] = email
+            except Exception:
+                pass
+
+        return user
+
+    def _get_salesforce_data(self, data):
+        """
+
+        :param data:
+        :return:
+        """
+        salesforce_data = {}
+        order_lines = data.get("supported_lines")
+        if len(order_lines) > 0:
+            try:
+                salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
+                salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
+                salesforce_data["PaymentAmount"] = data.get("paid_amount")
+                salesforce_data["Amount_Currency"] = data.get("currency")
+            except Exception:
+                pass
+
+        return salesforce_data
+
+    def _get_program_of_interest_data(self, data, order_lines):
+        """
+
+        :param data:
+        :param order_lines:
+        :return:
+        """
+        program_of_interest = {}
+        program = data.get("program")
+        try:
+            email = order_lines[0].get("user_email")
+            openedx_user, _ = get_user(email=email)
+            request_time = datetime.datetime.utcnow()
+            if program:
+                related_program = ProgramSalesforceEnrollment.objects.get(bundle_id=program.get("uuid"))
+                program_of_interest = related_program.meta
+                program_of_interest["Drupal_ID"] = "enrollment+program+{}+{}".format(
+                    openedx_user.username,
+                    request_time.strftime("%Y/%m/%d-%H:%M:%S"),
+                )
+            else:
+                single_course = order_lines[0]
+                course = self._get_course(single_course.get("course_id"))
+                program_of_interest = course.other_course_settings.get("salesforce_data")
+                program_of_interest["Drupal_ID"] = "enrollment+course+{}+{}".format(
+                    openedx_user.username,
+                    request_time.strftime("%Y-%m-%d-%H:%M:%S"),
+                )
+        except:
+            pass
+
+        return program_of_interest
+
+    def _get_courses_data(self, data, order_lines):
+        """
+
+        :param data:
+        :param order_lines:
+        :return:
+        """
+        courses = []
+        for line in order_lines:
+            try:
+                course_id = line.get("course_id")
+                course = self._get_course(course_id)
+                salesforce_settings = course.other_course_settings.get("salesforce_data")
+                course_data = dict()
+                course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
+                course_data["CourseCode"] = course_id
+                course_data["CourseStartDate"] = course.start.strftime("%Y-%m-%d") or "Future Start"
+                course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d") or "Future Start"
+                course_data["CourseDuration"] = "0"
+            except:
+                pass
+            else:
+                courses.append(course_data)
+
+
+        return courses
+
+    def _get_enrollment_data(self, data, course_settings):
+        """
+        :param data:
+        :return:
+        """
+        valid_keys = [
+            "FirstName",
+            "LastName",
+            "Email",
+            "Company",
+            "Institution_Hidden",
+            "Type_Hidden",
+            "Program_of_Interest",
+            "Lead_Source",
+            "Secondary_Source",
+            "Tertiary_Source",
+            "Drupal_ID",
+            "Purchase_Type",
+            "PaymentAmount",
+            "Amount_Currency",
+            "Course_Data",
+        ]
+        payload = {
+            "enrollment": {}
+        }
+        openedx_user_info = self._get_openedx_user(data)
+        payload["enrollment"].update(openedx_user_info)
+
+        salesforce_data = self._get_salesforce_data(data)
+        payload["enrollment"].update(salesforce_data)
+
+        payload["enrollment"]["Course_Data"] = self._get_courses_data(
+            data,
+            data.get("supported_lines"),
+        )
+
+        unwanted = set(payload["enrollment"]) - set(valid_keys)
+        for unwanted_key in unwanted:
+            del payload["enrollment"][unwanted_key]
+
+        return payload
+
+    def _get_enrollment_url(self, course_settings):
+        """
+        """
+        token = self._get_auth_token()
+        return "{}/{}".format(token.get('instance_url'), settings.SALESFORCE_ENROLLMENT_API_PATH)
+
+
 class ExternalEnrollmentFactory:
     """
     """
@@ -224,3 +464,23 @@ class ExternalEnrollmentFactory:
             return EdxInstanceExternalEnrollment()
         else:
             return EdxEnterpriseExternalEnrollment()
+
+
+@task(default_retry_delay=5, max_retries=5)  # pylint: disable=not-callable
+def generate_salesforce_enrollment(data, *args, **kwargs):
+    """
+    Handles the enrollment process at Salesforce.
+    Args:
+        data: request data
+    """
+
+    try:
+        # Getting the corresponding enrollment controller
+        enrollment_controller = SalesforceEnrollment()
+    except Exception:
+        pass
+    else:
+        # Calling the controller enrollment method
+        response, request_status = enrollment_controller._post_enrollment(data)
+
+    return
