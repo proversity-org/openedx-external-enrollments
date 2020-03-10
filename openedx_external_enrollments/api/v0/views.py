@@ -23,7 +23,10 @@ from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensio
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import (
     get_api_key_permission,
 )
-from openedx_external_enrollments.models import ProgramSalesforceEnrollment
+from openedx_external_enrollments.models import (
+    ProgramSalesforceEnrollment,
+    EnrollmentRequestLog,
+)
 from student.models import get_user
 
 LOG = logging.getLogger(__name__)
@@ -141,6 +144,11 @@ class BaseExternalEnrollment(object):
         LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), json_data)
         LOG.info('calling enrollment for [%s] with url: %s', self.__str__(), url)
         LOG.info('calling enrollment for [%s] with course settings: %s', self.__str__(), course_settings)
+        log_details = {
+            "request_payload" : json_data,
+            "url" : url,
+            "course_advanced_settings" : course_settings,
+        }
 
         try:
             response = self._execute_post(
@@ -150,9 +158,13 @@ class BaseExternalEnrollment(object):
             )
         except Exception as error:
             LOG.error("Failed to complete enrollment. Reason: "+ str(error))
+            log_details["response"] = { "error": "Failed to complete enrollment. Reason: "+ str(error)}
+            EnrollmentRequestLog.objects.create(request_type=str(self), details=log_details)
             return str(error), status.HTTP_400_BAD_REQUEST
         else:
             LOG.info('External enrollment response for [%s] -- %s', self.__str__(), response.json())
+            log_details["response"] = response.json()
+            EnrollmentRequestLog.objects.create(request_type=str(self), details=log_details)
             return response.json(), status.HTTP_200_OK
 
 
@@ -217,7 +229,7 @@ class EdxInstanceExternalEnrollment(BaseExternalEnrollment):
     """
 
     def __str__(self):
-        return "openedX instance"
+        return "openedX"
 
     def _get_enrollment_headers(self):
         """
