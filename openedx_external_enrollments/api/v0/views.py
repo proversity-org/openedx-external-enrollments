@@ -27,7 +27,7 @@ from openedx_external_enrollments.models import (
     ProgramSalesforceEnrollment,
     EnrollmentRequestLog,
 )
-from student.models import get_user
+from student.models import get_user, CourseEnrollment
 
 LOG = logging.getLogger(__name__)
 
@@ -404,8 +404,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
                 course_data["CourseCode"] = self._get_salesforce_course_id(course, course_id)
-                course_data["CourseStartDate"] = course.start.strftime("%Y-%m-%d") or "Future Start"
-                course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d") or "Future Start"
+                course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
+                course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
             except:
                 pass
@@ -417,7 +417,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def _get_salesforce_course_id(self, course, internal_id):
         """
-        Returns either an external course id or internal
+        Returns either an external course id or internal.
         """
         if self._is_external_course(course):
             return course.other_course_settings.get("external_course_run_id")
@@ -435,6 +435,23 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             course.other_course_settings.get("external_course_target")
         )
 
+    @staticmethod
+    def _get_course_start_date(course, email, course_id):
+        """
+        Return the course date start.
+        """
+
+        user, _ = get_user(email=email)
+        course_key = CourseKey.from_string(course_id)
+        enrollment = CourseEnrollment.get_enrollment(user, course_key)
+
+        if course.self_paced:
+            dates_to_check = [enrollment.created, course.start]
+            student_start = max(dates_to_check)
+        else:
+            student_start = course.start
+
+        return student_start.strftime("%Y-%m-%d")
 
     def _get_enrollment_data(self, data, course_settings):
         """
