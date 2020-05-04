@@ -383,6 +383,19 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     openedx_user.username,
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
                 )
+
+            program_of_interest["Lead_Source"] = data.get(
+                "utm_source",
+                program_of_interest.get("Lead_Source", "Undefined"),
+            )
+            program_of_interest["Secondary_Source"] = data.get(
+                "utm_campaign",
+                program_of_interest.get("Secondary_Source", "Undefined"),
+            )
+            program_of_interest["Tertiary_Source"] = data.get(
+                "utm_medium",
+                program_of_interest.get("Tertiary_Source", "Undefined"),
+            )
         except:
             pass
 
