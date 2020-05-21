@@ -1,0 +1,8 @@
+# Test dependencies go here.
+
+-c constraints.txt
+-r base.txt
+
+coverage
+mock
+testfixtures

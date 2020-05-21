@@ -16,18 +16,19 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework_oauth.authentication import OAuth2Authentication
 
-from courseware.courses import get_course_by_id
+from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensions import (
     get_jwt_authentication,
 )
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import (
     get_api_key_permission,
 )
+from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnrollment, get_user
 from openedx_external_enrollments.models import (
     ProgramSalesforceEnrollment,
     EnrollmentRequestLog,
 )
-from student.models import get_user, CourseEnrollment
+
 
 LOG = logging.getLogger(__name__)
 
@@ -166,6 +167,18 @@ class BaseExternalEnrollment(object):
             log_details["response"] = response.json()
             EnrollmentRequestLog.objects.create(request_type=str(self), details=log_details)
             return response.json(), status.HTTP_200_OK
+
+    def _get_enrollment_data(course_settings):
+        """Unimplemented method necessary to execute _post_enrollment."""
+        raise NotImplementedError
+
+    def _get_enrollment_headers(course_settings):
+        """Unimplemented method necessary to execute _post_enrollment."""
+        raise NotImplementedError
+
+    def _get_enrollment_url(course_settings):
+        """Unimplemented method necessary to execute _post_enrollment."""
+        raise NotImplementedError
 
 
 class EdxEnterpriseExternalEnrollment(BaseExternalEnrollment):
