@@ -1,5 +1,15 @@
 # Main requirements of your plugin application.
 
-Django<2.0
-pylint==1.9.3
-pycodestyle==2.5.0
+-c constraints.txt
+-r github.in
+
+celery
+Django
+djangorestframework
+edx-opaque-keys
+jsonfield
+oauthlib
+pycodestyle
+pylint
+requests
+requests-oauthlib

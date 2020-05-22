@@ -21,7 +21,8 @@ requirements: ## install environment requirements
 
 upgrade: ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
 	pip install -q pip-tools
-	pip-compile -U --output-file requirements/base.txt requirements/base.in
+	pip-compile --upgrade -o requirements/base.txt requirements/base.in
+	pip-compile --upgrade -o requirements/test.txt requirements/test.in
 
 quality: clean ## check coding style with pycodestyle and pylint
 	pycodestyle ./openedx_external_enrollments
