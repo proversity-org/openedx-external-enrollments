@@ -162,9 +162,9 @@ class SalesforceEnrollmentTest(TestCase):
             'program': {},
         }
         expected_data = {
-            'Lead_Source': 'Undefined',
-            'Secondary_Source': 'Undefined',
-            'Tertiary_Source': 'Undefined',
+            'Lead_Source': 'Open edX API',
+            'Secondary_Source': '',
+            'Tertiary_Source': '',
         }
         course_mock = Mock()
         course_mock.other_course_settings = {'salesforce_data': {}}
@@ -338,8 +338,8 @@ class SalesforceEnrollmentTest(TestCase):
         }
         salesforce_data = {
             'Lead_Source': 'test-source',
-            'Secondary_Source': 'Undefined',
-            'Tertiary_Source': 'Undefined',
+            'Secondary_Source': '',
+            'Tertiary_Source': '',
         }
         course_data = {
             'CourseName': 'test-course-name',
