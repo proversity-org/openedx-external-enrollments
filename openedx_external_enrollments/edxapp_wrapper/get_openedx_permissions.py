@@ -11,6 +11,7 @@ def get_staff_or_owner(*args, **kwargs):  # pylint: disable=unused-argument
 
     return backend.IsStaffOrOwner
 
+
 def get_api_key_permission(*args, **kwargs):  # pylint: disable=unused-argument
     """ Get ApiKeyHeaderPermissionIsAuthenticated Class """
 

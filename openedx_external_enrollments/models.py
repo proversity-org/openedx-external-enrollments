@@ -1,7 +1,7 @@
 """
 Model module
 """
-from django.db import  connection, models
+from django.db import models
 from jsonfield.fields import JSONField
 
 
@@ -13,7 +13,7 @@ class ProgramSalesforceEnrollment(models.Model):
     bundle_id = models.CharField(max_length=48, unique=True)
     meta = JSONField(null=False, blank=True)
 
-    class Meta:
+    class Meta(object):
         """
         Model meta class.
         """
@@ -33,7 +33,7 @@ class EnrollmentRequestLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(object):
         """
         Model meta class.
         """

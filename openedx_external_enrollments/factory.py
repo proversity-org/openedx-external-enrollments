@@ -7,9 +7,9 @@ from openedx_external_enrollments.external_enrollments.edx_instance_external_enr
 )
 
 
-class ExternalEnrollmentFactory:
-    """
-    """
+class ExternalEnrollmentFactory(object):
+    """Class to define the right controller."""
+
     @classmethod
     def get_enrollment_controller(cls, controller):
         """

@@ -28,7 +28,7 @@ class BaseExternalEnrollmentTest(TestCase):
         headers = 'headers'
         json_data = 'json_data'
 
-        self.base._execute_post(
+        self.base._execute_post(  # pylint: disable=protected-access
             url=url,
             data=data,
             headers=headers,
@@ -61,7 +61,7 @@ class BaseExternalEnrollmentTest(TestCase):
         log3 = 'calling enrollment for [{}] with course settings: {}'.format(self.base.__str__(), course_settings)
 
         with LogCapture(level=logging.INFO) as log_capture:
-            response = self.base._post_enrollment(data, course_settings)
+            response = self.base._post_enrollment(data, course_settings)  # pylint: disable=protected-access
             log4 = 'External enrollment response for [{}] -- {}'.format(self.base.__str__(), data)
             log_capture.check(
                 (module, 'INFO', log1),
@@ -86,13 +86,16 @@ class BaseExternalEnrollmentTest(TestCase):
             'response': data,
         }
 
-        request_log = EnrollmentRequestLog.objects.filter(request_type=str(self.base), details=log_details)
+        request_log = EnrollmentRequestLog.objects.filter(  # pylint: disable=no-member
+            request_type=str(self.base),
+            details=log_details,
+        )
         self.assertEqual(len(request_log), 1)
 
         headers_mock.side_effect = NotImplementedError('My test error')
 
         with LogCapture(level=logging.INFO) as log_capture:
-            response = self.base._post_enrollment(data, course_settings)
+            response = self.base._post_enrollment(data, course_settings)  # pylint: disable=protected-access
             log4 = 'Failed to complete enrollment. Reason: {}'.format('My test error')
             log_capture.check(
                 (module, 'INFO', log1),
@@ -102,17 +105,22 @@ class BaseExternalEnrollmentTest(TestCase):
             )
 
         log_details['response'] = {'error': log4}
-        request_log = EnrollmentRequestLog.objects.filter(request_type=str(self.base), details=log_details)
+        request_log = EnrollmentRequestLog.objects.filter(  # pylint: disable=no-member
+            request_type=str(self.base),
+            details=log_details,
+        )
         self.assertEqual(len(request_log), 1)
 
     def test_get_enrollment_data(self):
         """Testing _get_enrollment_data method."""
-        self.assertRaises(NotImplementedError, self.base._get_enrollment_data)
+        with self.assertRaises(NotImplementedError):
+            self.base._get_enrollment_data({}, {})  # pylint: disable=protected-access
 
     def test_get_enrollment_headers(self):
         """Testing _get_enrollment_headers method."""
-        self.assertRaises(NotImplementedError, self.base._get_enrollment_headers)
+        self.assertRaises(NotImplementedError, self.base._get_enrollment_headers)  # pylint: disable=protected-access
 
     def test_get_enrollment_url(self):
         """Testing _get_enrollment_url method."""
-        self.assertRaises(NotImplementedError, self.base._get_enrollment_url)
+        with self.assertRaises(NotImplementedError):
+            self.base._get_enrollment_url({})  # pylint: disable=protected-access

@@ -3,18 +3,19 @@ Course home concrete module
 """
 import datetime
 
-from courseware.courses import get_course_by_id
-from student.models import anonymous_id_for_user, CourseEnrollment
-
-from opaque_keys.edx.keys import CourseKey
 import pytz
-from submissions import api as submissions_api
+from opaque_keys.edx.keys import CourseKey
+
+from courseware.courses import get_course_by_id  # pylint: disable=import-error
+from student.models import CourseEnrollment, anonymous_id_for_user  # pylint: disable=import-error
+from submissions import api as submissions_api  # pylint: disable=import-error
 
 DAYS_IN_WEEK = 7
 
 
 def calculate_course_home(course_id, user):
     """
+    Calculate course home.
     """
 
     course_key = CourseKey.from_string(course_id)
@@ -37,6 +38,7 @@ def calculate_course_home(course_id, user):
 
     return None
 
+
 def is_external_course(course_id):
     """
     Decide if the course was confiured as external or not.
@@ -49,6 +51,7 @@ def is_external_course(course_id):
         custom_course_settings.get("external_course_run_id") and
         custom_course_settings.get("external_course_target")
     )
+
 
 def _calculate_entry_point(course, course_id, course_key, course_entry_points, user, enrollment):
     """
@@ -70,6 +73,7 @@ def _calculate_entry_point(course, course_id, course_key, course_entry_points, u
         url = "/courses/{}/jump_to_id/{}".format(course_id, current_entry_point.get("block_id"))
 
     return url
+
 
 def _get_current_entry_point(course_entry_points, student_start_date):
     """
@@ -95,6 +99,7 @@ def _get_current_entry_point(course_entry_points, student_start_date):
 
     return entry_point
 
+
 def _check_entry_point_completion(point, user, course_key, course_id):
     """
     Checks if there is a submission entry related with the given point and course for the user.
@@ -106,7 +111,4 @@ def _check_entry_point_completion(point, user, course_key, course_id):
         item_type=point.get("block_type"),
     )
 
-    if submissions_api.get_submissions(student_item):
-        return True
-    else:
-        return False
+    return bool(submissions_api.get_submissions(student_item))
