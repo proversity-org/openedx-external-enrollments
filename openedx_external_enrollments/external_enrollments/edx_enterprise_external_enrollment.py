@@ -58,7 +58,7 @@ class EdxEnterpriseExternalEnrollment(BaseExternalEnrollment):
                 data.get("course_mode"),
             ),
             "user_email": data.get("user_email"),
-            "is_active": True,
+            "is_active": data.get("is_active", True),
         }]
 
     def _get_enrollment_url(self, course_settings):
