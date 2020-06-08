@@ -1,11 +1,11 @@
 """This file contains all the necessary backend in a test scenario."""
 
 
-class ApiKeyHeaderPermissionIsAuthenticated:
+class ApiKeyHeaderPermissionIsAuthenticated(object):
     """Test class for openedx.core.lib.api.permissions.ApiKeyHeaderPermissionIsAuthenticated"""
 
 
-class JwtAuthentication:
+class JwtAuthentication(object):
     """Test class for edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication"""
 
 

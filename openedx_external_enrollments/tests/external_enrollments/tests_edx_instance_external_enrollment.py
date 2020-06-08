@@ -40,7 +40,7 @@ class EdxInstanceExternalEnrollmentTest(TestCase):
         get_user_mock.return_value = (user, '')
 
         self.assertEqual(
-            self.base._get_enrollment_data(data, course_settings),
+            self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
             expected_data,
         )
 
@@ -48,7 +48,7 @@ class EdxInstanceExternalEnrollmentTest(TestCase):
         expected_data['mode'] = data['course_mode']
 
         self.assertEqual(
-            self.base._get_enrollment_data(data, course_settings),
+            self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
             expected_data,
         )
 
@@ -56,7 +56,7 @@ class EdxInstanceExternalEnrollmentTest(TestCase):
         expected_data['course_details']['course_id'] = None
 
         self.assertEqual(
-            self.base._get_enrollment_data({}, {}),
+            self.base._get_enrollment_data({}, {}),  # pylint: disable=protected-access
             expected_data,
         )
 
@@ -68,7 +68,7 @@ class EdxInstanceExternalEnrollmentTest(TestCase):
             "X-Edx-Api-Key": settings.EDX_API_KEY,
         }
 
-        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)
+        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)  # pylint: disable=protected-access
 
     def test_get_enrollment_url(self):
         """Testing _get_enrollment_url method."""
@@ -77,11 +77,11 @@ class EdxInstanceExternalEnrollmentTest(TestCase):
             'external_enrollment_api_url': expected_url,
         }
         self.assertIsNone(
-            self.base._get_enrollment_url(course_settings={}),
+            self.base._get_enrollment_url(course_settings={}),  # pylint: disable=protected-access
         )
         self.assertEqual(
             expected_url,
-            self.base._get_enrollment_url(course_settings),
+            self.base._get_enrollment_url(course_settings),  # pylint: disable=protected-access
         )
 
     def test_str(self):

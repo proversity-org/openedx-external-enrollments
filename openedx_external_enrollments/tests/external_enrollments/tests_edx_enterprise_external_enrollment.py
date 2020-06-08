@@ -39,7 +39,7 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
         }
 
         self.assertEqual(
-            self.base._get_enrollment_data(data, course_settings),
+            self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
             [expected_data],
         )
 
@@ -47,7 +47,7 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
         expected_data['course_mode'] = data['course_mode']
 
         self.assertEqual(
-            self.base._get_enrollment_data(data, course_settings),
+            self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
             [expected_data],
         )
 
@@ -55,7 +55,7 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
         expected_data['is_active'] = True
 
         self.assertEqual(
-            self.base._get_enrollment_data({}, {}),
+            self.base._get_enrollment_data({}, {}),  # pylint: disable=protected-access
             [expected_data],
         )
 
@@ -78,15 +78,15 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
             'Authorization': 'test-token-type test-access-token',
         }
 
-        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)
+        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)  # pylint: disable=protected-access
         post_mock.assert_called_with(settings.EDX_ENTERPRISE_API_TOKEN_URL, data)
 
         post_mock.return_value.ok = False
-        self.assertIsNone(self.base._get_enrollment_headers())
+        self.assertIsNone(self.base._get_enrollment_headers())  # pylint: disable=protected-access
 
         with LogCapture(level=logging.INFO) as log_capture:
             post_mock.side_effect = Exception('test-exception')
-            self.assertIsNone(self.base._get_enrollment_headers())
+            self.assertIsNone(self.base._get_enrollment_headers())  # pylint: disable=protected-access
             log_capture.check(
                 (module, 'ERROR', 'Failed to get token: test-exception'),
             )
@@ -99,7 +99,7 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
         )
         self.assertEqual(
             expected_url,
-            self.base._get_enrollment_url(course_settings={}),
+            self.base._get_enrollment_url(course_settings={}),  # pylint: disable=protected-access
         )
 
     def test_str(self):
@@ -111,4 +111,3 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
             'edX',
             self.base.__str__(),
         )
-

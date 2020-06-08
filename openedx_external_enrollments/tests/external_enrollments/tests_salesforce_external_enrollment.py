@@ -23,7 +23,7 @@ class SalesforceEnrollmentTest(TestCase):
     def test_get_course(self, get_course_by_id_mock):
         """Testing _get_course method."""
         self.assertIsNone(
-            self.base._get_course(''),
+            self.base._get_course(''),  # pylint: disable=protected-access
         )
 
         course_id = 'course-v1:test+CS102+2019_T3'
@@ -31,7 +31,7 @@ class SalesforceEnrollmentTest(TestCase):
         expected_course = 'test-course'
         get_course_by_id_mock.return_value = expected_course
 
-        self.assertEqual(self.base._get_course(course_id), expected_course)
+        self.assertEqual(self.base._get_course(course_id), expected_course)  # pylint: disable=protected-access
         get_course_by_id_mock.assert_called_once_with(course_key)
 
     def test_str(self):
@@ -56,7 +56,7 @@ class SalesforceEnrollmentTest(TestCase):
             'Content-Type': 'application/json',
             'Authorization': 'test-token-type test-access-token',
         }
-        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)
+        self.assertEqual(self.base._get_enrollment_headers(), expected_headers)  # pylint: disable=protected-access
         get_auth_token_mock.assert_called_once()
 
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.OAuth2Session')
@@ -76,7 +76,7 @@ class SalesforceEnrollmentTest(TestCase):
             'grant_type': 'password',
         }
 
-        self.assertEqual('test-token', self.base._get_auth_token())
+        self.assertEqual('test-token', self.base._get_auth_token())  # pylint: disable=protected-access
         backend_mock.assert_called_once_with(**request_params)
         oauth_session_mock.assert_called_once_with(client='test-client')
         oauth_mock.fetch_token.assert_called_once_with(token_url=settings.SALESFORCE_API_TOKEN_URL)
@@ -84,7 +84,7 @@ class SalesforceEnrollmentTest(TestCase):
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
     def test_get_openedx_user(self, get_user_mock):
         """Testing _get_openedx_user method."""
-        self.assertEqual({}, self.base._get_openedx_user(data={}))
+        self.assertEqual({}, self.base._get_openedx_user(data={}))  # pylint: disable=protected-access
 
         data = {
             'supported_lines': [
@@ -100,11 +100,11 @@ class SalesforceEnrollmentTest(TestCase):
         profile_mock.name = 'Peter Parker'
         get_user_mock.return_value = (Mock(), profile_mock)
 
-        self.assertEqual(expected_user, self.base._get_openedx_user(data))
+        self.assertEqual(expected_user, self.base._get_openedx_user(data))  # pylint: disable=protected-access
         get_user_mock.assert_called_once_with(email='test-email')
 
         get_user_mock.side_effect = Exception('test')
-        self.assertEqual({}, self.base._get_openedx_user(data))
+        self.assertEqual({}, self.base._get_openedx_user(data))  # pylint: disable=protected-access
 
     @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
     def test_get_salesforce_data(self, get_program_mock):
@@ -116,7 +116,7 @@ class SalesforceEnrollmentTest(TestCase):
             'currency': 'USD',
         }
 
-        self.assertEqual({}, self.base._get_salesforce_data(data))
+        self.assertEqual({}, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
 
         lines = [
             {'user_email': 'test-email'},
@@ -135,21 +135,21 @@ class SalesforceEnrollmentTest(TestCase):
         expected_data.update(program_data)
         get_program_mock.return_value = program_data
 
-        self.assertEqual(expected_data, self.base._get_salesforce_data(data))
+        self.assertEqual(expected_data, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
         get_program_mock.assert_called_once_with(data, lines)
 
         data['program'] = True
         expected_data['Purchase_Type'] = 'Program'
-        self.assertEqual(expected_data, self.base._get_salesforce_data(data))
+        self.assertEqual(expected_data, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
 
         get_program_mock.side_effect = Exception('test')
-        self.assertEqual({}, self.base._get_salesforce_data(data))
+        self.assertEqual({}, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
 
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
     @patch.object(SalesforceEnrollment, '_get_course')
     def test_get_program_of_interest_data(self, get_course_mock, get_user_mock):
         """Testing _get_program_of_interest_data method."""
-        self.assertEqual({}, self.base._get_program_of_interest_data({}, []))
+        self.assertEqual({}, self.base._get_program_of_interest_data({}, []))  # pylint: disable=protected-access
 
         lines = [
             {
@@ -177,7 +177,7 @@ class SalesforceEnrollmentTest(TestCase):
             datetime.utcnow().strftime('%Y-%m-%d-%H:%M'),
         )
 
-        program_data = self.base._get_program_of_interest_data(data, lines)
+        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
         get_user_mock.assert_called_with(email='test-email')
         get_course_mock.assert_called_with('test-course-id')
 
@@ -193,7 +193,7 @@ class SalesforceEnrollmentTest(TestCase):
         expected_data.update(salesforce_data)
         course_mock.other_course_settings = {'salesforce_data': salesforce_data}
 
-        program_data = self.base._get_program_of_interest_data(data, lines)
+        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
         drupal_id = program_data.pop('Drupal_ID')
         self.assertEqual(expected_data, program_data)
 
@@ -204,8 +204,11 @@ class SalesforceEnrollmentTest(TestCase):
             user_mock.username,
             datetime.utcnow().strftime('%Y/%m/%d-%H:%M'),
         )
-        ProgramSalesforceEnrollment.objects.create(bundle_id='test-uuid', meta=salesforce_data)
-        program_data = self.base._get_program_of_interest_data(data, lines)
+        ProgramSalesforceEnrollment.objects.create(  # pylint: disable=no-member
+            bundle_id='test-uuid',
+            meta=salesforce_data,
+        )
+        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
         drupal_id = program_data.pop('Drupal_ID')
         self.assertEqual(expected_data, program_data)
         self.assertTrue(drupal_id.startswith(expected_drupal))
@@ -215,7 +218,7 @@ class SalesforceEnrollmentTest(TestCase):
     @patch.object(SalesforceEnrollment, '_get_course')
     def test_get_courses_data(self, get_course_mock, get_date_mock, get_salesforce_mock):
         """Testing _get_courses_data method."""
-        self.assertEqual([], self.base._get_courses_data({}, []))
+        self.assertEqual([], self.base._get_courses_data({}, []))  # pylint: disable=protected-access
 
         lines = [
             {
@@ -239,7 +242,7 @@ class SalesforceEnrollmentTest(TestCase):
             'CourseDuration': '0',
         }
 
-        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))
+        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
         get_course_mock.assert_called_with('test-course-id')
         get_date_mock.assert_called_with(course_mock, 'test-email', 'test-course-id')
 
@@ -250,11 +253,11 @@ class SalesforceEnrollmentTest(TestCase):
         }
         expected_data['CourseName'] = 'test-program'
 
-        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))
+        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
 
         get_course_mock.side_effect = Exception('test-exception')
 
-        self.assertEqual([], self.base._get_courses_data({}, lines))
+        self.assertEqual([], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
 
     @patch.object(SalesforceEnrollment, '_is_external_course')
     def test_get_salesforce_course_id(self, external_course_mock):
@@ -263,32 +266,35 @@ class SalesforceEnrollmentTest(TestCase):
         course_mock = Mock()
         course_mock.other_course_settings = {'external_course_run_id': 'test-settings-id'}
 
-        self.assertEqual('internal-id', self.base._get_salesforce_course_id(course_mock, 'internal-id'))
+        self.assertEqual(
+            'internal-id',
+            self.base._get_salesforce_course_id(course_mock, 'internal-id'),  # pylint: disable=protected-access
+        )
         external_course_mock.assert_called_with(course_mock)
 
         external_course_mock.return_value = True
         self.assertEqual(
             'test-settings-id',
-            self.base._get_salesforce_course_id(course_mock, 'internal-id'),
+            self.base._get_salesforce_course_id(course_mock, 'internal-id'),  # pylint: disable=protected-access
         )
 
     def test_is_external_course(self):
         """Testing _is_external_course method."""
         course_mock = Mock()
         course_mock.other_course_settings = {}
-        self.assertFalse(self.base._is_external_course(course_mock))
+        self.assertFalse(self.base._is_external_course(course_mock))  # pylint: disable=protected-access
 
         course_mock.other_course_settings = {'external_course_run_id': 'test'}
-        self.assertFalse(self.base._is_external_course(course_mock))
+        self.assertFalse(self.base._is_external_course(course_mock))  # pylint: disable=protected-access
 
         course_mock.other_course_settings = {'external_course_target': 'test'}
-        self.assertFalse(self.base._is_external_course(course_mock))
+        self.assertFalse(self.base._is_external_course(course_mock))  # pylint: disable=protected-access
 
         course_mock.other_course_settings = {
             'external_course_target': 'test',
             'external_course_run_id': 'test',
         }
-        self.assertTrue(self.base._is_external_course(course_mock))
+        self.assertTrue(self.base._is_external_course(course_mock))  # pylint: disable=protected-access
 
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.CourseEnrollment')
@@ -308,14 +314,14 @@ class SalesforceEnrollmentTest(TestCase):
 
         self.assertEqual(
             now.strftime('%Y-%m-%d'),
-            self.base._get_course_start_date(course_mock, 'test-email', course_id),
+            self.base._get_course_start_date(course_mock, 'test-email', course_id),  # pylint: disable=protected-access
         )
         enrollment_mock.get_enrollment.assert_called_with(user, course_key)
 
         course_mock.self_paced = False
         self.assertEqual(
             (now - timedelta(days=1)).strftime('%Y-%m-%d'),
-            self.base._get_course_start_date(course_mock, 'test-email', course_id),
+            self.base._get_course_start_date(course_mock, 'test-email', course_id),  # pylint: disable=protected-access
         )
 
     @patch.object(SalesforceEnrollment, '_get_salesforce_data')
@@ -359,14 +365,14 @@ class SalesforceEnrollmentTest(TestCase):
         expected_data = {
             'enrollment': enrollment,
         }
-        self.assertEqual(expected_data, self.base._get_enrollment_data(data, {}))
+        self.assertEqual(expected_data, self.base._get_enrollment_data(data, {}))  # pylint: disable=protected-access
         get_openedx_mock.assert_called_once_with(data)
         get_salesforce_mock.assert_called_once_with(data)
         get_course_mock.assert_called_once_with(data, lines)
 
         user_data['unwanted_key'] = 'testing'
         get_openedx_mock.return_value = user_data
-        self.assertEqual(expected_data, self.base._get_enrollment_data(data, {}))
+        self.assertEqual(expected_data, self.base._get_enrollment_data(data, {}))  # pylint: disable=protected-access
 
     @patch.object(SalesforceEnrollment, '_get_auth_token')
     def test_get_enrollment_url(self, get_auth_token_mock):
@@ -377,5 +383,5 @@ class SalesforceEnrollmentTest(TestCase):
             'instance_url': 'test-instance-url',
         }
         expected_url = '{}/{}'.format('test-instance-url', settings.SALESFORCE_ENROLLMENT_API_PATH)
-        self.assertEqual(expected_url, self.base._get_enrollment_url({}))
+        self.assertEqual(expected_url, self.base._get_enrollment_url({}))  # pylint: disable=protected-access
         get_auth_token_mock.assert_called_once()

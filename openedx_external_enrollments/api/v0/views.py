@@ -24,6 +24,9 @@ LOG = logging.getLogger(__name__)
 
 
 class ExternalEnrollment(APIView):
+    """
+    ExternalEnrollment APIView.
+    """
 
     authentication_classes = [
         get_jwt_authentication(),
@@ -42,7 +45,7 @@ class ExternalEnrollment(APIView):
 
         if not course:
             return JsonResponse(
-                {"error": "Invalid operation: course not found" },
+                {"error": "Invalid operation: course not found"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -51,7 +54,7 @@ class ExternalEnrollment(APIView):
             enrollment_controller = ExternalEnrollmentFactory.get_enrollment_controller(
                 course.other_course_settings.get("external_platform_target")
             )
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             LOG.info('Course [%s] not configured as external', request.data.get("course_id"))
             return JsonResponse(
                 {"info": "Course {} not configured as external".format(request.data.get("course_id"))},
@@ -59,7 +62,10 @@ class ExternalEnrollment(APIView):
             )
         else:
             # Now, let's try to execute the enrollment
-            response, request_status = enrollment_controller._post_enrollment(request.data, course.other_course_settings)
+            response, request_status = enrollment_controller._post_enrollment(  # pylint: disable=protected-access
+                request.data,
+                course.other_course_settings,
+            )
 
         return JsonResponse(response, status=request_status, safe=False)
 
@@ -77,6 +83,9 @@ class ExternalEnrollment(APIView):
 
 
 class SalesforceEnrollmentView(APIView):
+    """
+    SalesforceEnrollmentView APIView.
+    """
 
     authentication_classes = [
         get_jwt_authentication(),
@@ -90,12 +99,10 @@ class SalesforceEnrollmentView(APIView):
         """
         View to execute enrollments in salesforce.
         """
-        response = {}
-
         try:
             # Getting the corresponding enrollment controller
-            enrollment_controller = SalesforceEnrollment()
-        except Exception:
+            SalesforceEnrollment()
+        except Exception:  # pylint: disable=broad-except
             LOG.info("Can't instantiate Salesforce enrollment controller")
             return JsonResponse(
                 {"info": "Can't instantiate Salesforce enrollment controller"},

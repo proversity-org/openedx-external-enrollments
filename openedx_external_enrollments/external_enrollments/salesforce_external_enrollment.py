@@ -14,6 +14,9 @@ from openedx_external_enrollments.external_enrollments.base_external_enrollment 
 
 
 class SalesforceEnrollment(BaseExternalEnrollment):
+    """
+    SalesforceEnrollment class.
+    """
 
     def __str__(self):
         return "salesforce"
@@ -74,13 +77,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         if order_lines:
             try:
                 email = order_lines[0].get("user_email")
-                openedx_user, openedx_profile = get_user(email=email)
+                _, openedx_profile = get_user(email=email)
                 # TODO do not force logic assuming names with 2 words
                 first_name, last_name = openedx_profile.name.split(" ", 1)
                 user["FirstName"] = first_name.strip(" ")
                 user["LastName"] = last_name.strip(" ")
                 user["Email"] = email
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 pass
 
         return user
@@ -93,13 +96,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         salesforce_data = {}
         order_lines = data.get("supported_lines")
-        if len(order_lines) > 0:
+        if order_lines:
             try:
                 salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
                 salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
                 salesforce_data["PaymentAmount"] = data.get("paid_amount")
                 salesforce_data["Amount_Currency"] = data.get("currency")
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 pass
 
         return salesforce_data
@@ -118,7 +121,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             openedx_user, _ = get_user(email=email)
             request_time = datetime.datetime.utcnow()
             if program:
-                related_program = ProgramSalesforceEnrollment.objects.get(bundle_id=program.get("uuid"))
+                related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
+                    bundle_id=program.get("uuid"),
+                )
                 program_of_interest = related_program.meta
                 program_of_interest["Drupal_ID"] = "enrollment+program+{}+{}".format(
                     openedx_user.username,
@@ -145,12 +150,12 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 "utm_medium",
                 program_of_interest.get("Tertiary_Source", ""),
             )
-        except:
+        except Exception:  # pylint: disable=broad-except
             pass
 
         return program_of_interest
 
-    def _get_courses_data(self, data, order_lines):
+    def _get_courses_data(self, data, order_lines):  # pylint: disable=unused-argument
         """
 
         :param data:
@@ -169,7 +174,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
-            except:
+            except Exception:  # pylint: disable=broad-except
                 pass
             else:
                 courses.append(course_data)

@@ -11,6 +11,7 @@ LOG = logging.getLogger(__name__)
 
 class EdxEnterpriseExternalEnrollment(BaseExternalEnrollment):
     """
+    EdxEnterpriseExternalEnrollment class.
     """
 
     def __str__(self):
@@ -30,8 +31,8 @@ class EdxEnterpriseExternalEnrollment(BaseExternalEnrollment):
                 settings.EDX_ENTERPRISE_API_TOKEN_URL,
                 data,
             )
-        except Exception as error:
-            LOG.error("Failed to get token: " + str(error))
+        except Exception as error:  # pylint: disable=broad-except
+            LOG.error("Failed to get token: %s", str(error))
         else:
             if response.ok:
                 headers = {
@@ -43,6 +44,8 @@ class EdxEnterpriseExternalEnrollment(BaseExternalEnrollment):
                     )
                 }
                 return headers
+
+        return None
 
     def _get_enrollment_data(self, data, course_settings):
 

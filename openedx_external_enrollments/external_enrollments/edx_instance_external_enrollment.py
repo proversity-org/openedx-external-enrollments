@@ -7,6 +7,7 @@ from openedx_external_enrollments.external_enrollments.base_external_enrollment 
 
 class EdxInstanceExternalEnrollment(BaseExternalEnrollment):
     """
+    EdxInstanceExternalEnrollment class.
     """
 
     def __str__(self):

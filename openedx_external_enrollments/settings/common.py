@@ -40,10 +40,12 @@ def plugin_settings(settings):
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
     settings.OEE_COURSEWARE_BACKEND = 'openedx_external_enrollments.edxapp_wrapper.backends.courseware_i_v1'
-    settings.OEE_EDX_REST_FRAMEWORK_EXTENSIONS = 'openedx_external_enrollments.edxapp_wrapper.backends.edx_rest_framework_extensions_i_v1'
+    settings.OEE_EDX_REST_FRAMEWORK_EXTENSIONS = \
+        'openedx_external_enrollments.edxapp_wrapper.backends.edx_rest_framework_extensions_i_v1'
     settings.OEE_OPENEDX_PERMISSIONS = 'openedx_external_enrollments.edxapp_wrapper.backends.openedx_permissions_i_v1'
     settings.OEE_COURSE_HOME_MODULE = 'openedx_external_enrollments.edxapp_wrapper.backends.course_home_i_v1'
-    settings.OEE_COURSE_HOME_CALCULATOR = 'openedx_external_enrollments.edxapp_wrapper.get_course_home.calculate_course_home'
+    settings.OEE_COURSE_HOME_CALCULATOR = \
+        'openedx_external_enrollments.edxapp_wrapper.get_course_home.calculate_course_home'
     settings.OEE_STUDENT_BACKEND = 'openedx_external_enrollments.edxapp_wrapper.backends.student_i_v1'
     settings.EDX_ENTERPRISE_API_CLIENT_ID = "client-id"
     settings.EDX_ENTERPRISE_API_CLIENT_SECRET = "client-secret"
