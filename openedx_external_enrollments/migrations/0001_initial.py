@@ -3,8 +3,8 @@
 """Auto-generated migration file."""
 from __future__ import unicode_literals
 
-from django.db import migrations, models
 import jsonfield.fields
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):

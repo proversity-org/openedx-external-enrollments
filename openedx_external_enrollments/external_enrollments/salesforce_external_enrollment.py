@@ -8,9 +8,8 @@ from requests_oauthlib import OAuth2Session
 
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnrollment, get_user
-
-from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
+from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 
 
 class SalesforceEnrollment(BaseExternalEnrollment):

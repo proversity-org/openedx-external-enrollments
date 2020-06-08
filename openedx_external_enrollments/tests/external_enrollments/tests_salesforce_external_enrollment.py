@@ -6,9 +6,7 @@ from django.test import TestCase
 from mock import Mock, patch
 from opaque_keys.edx.keys import CourseKey
 
-from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import (
-    SalesforceEnrollment,
-)
+from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 
 

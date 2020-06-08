@@ -3,10 +3,7 @@ Django admin page
 """
 from django.contrib import admin
 
-from openedx_external_enrollments.models import (
-    EnrollmentRequestLog,
-    ProgramSalesforceEnrollment,
-)
+from openedx_external_enrollments.models import EnrollmentRequestLog, ProgramSalesforceEnrollment
 
 
 class ProgramSalesforceEnrollmentAdmin(admin.ModelAdmin):
