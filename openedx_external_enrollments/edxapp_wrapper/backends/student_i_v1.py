@@ -1,6 +1,6 @@
 """Student backend file."""
 
-from student.models import get_user, CourseEnrollment  # pylint: disable=import-error
+from student.models import CourseEnrollment, get_user  # pylint: disable=import-error
 
 
 def get_user_backend(*args, **kwargs):

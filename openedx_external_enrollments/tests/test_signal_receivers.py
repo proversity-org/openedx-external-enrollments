@@ -2,7 +2,7 @@
 from django.test import TestCase
 from mock import Mock, patch
 
-from openedx_external_enrollments.signal_receivers import update_external_enrollment, delete_external_enrollment
+from openedx_external_enrollments.signal_receivers import delete_external_enrollment, update_external_enrollment
 
 
 class UpdateExternalEnrollmentTest(TestCase):
