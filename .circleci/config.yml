@@ -44,11 +44,7 @@ jobs:
           name: Run tests
           command: |
             . venv/bin/activate
-            coverage run --source="." manage.py test
-            coverage report --fail-under=83 -m
-            pycodestyle ./openedx_external_enrollments
-            pylint ./openedx_external_enrollments --rcfile=./setup.cfg
-            isort --check-only --recursive --diff ./openedx_external_enrollments
+            make validate_python
 
   # Based on answer https://discuss.circleci.com/t/run-tests-on-multiple-versions-of-python/15462
   test-2.7:
@@ -82,8 +78,4 @@ jobs:
           name: Run tests
           command: |
             . venv/bin/activate
-            coverage run --source="." --rcfile=.coveragerc manage.py test
-            coverage report --fail-under=83 --rcfile=.coveragerc -m
-            pycodestyle ./openedx_external_enrollments
-            pylint ./openedx_external_enrollments --rcfile=./setup.cfg
-            isort --check-only --recursive --diff ./openedx_external_enrollments
+            make validate_python

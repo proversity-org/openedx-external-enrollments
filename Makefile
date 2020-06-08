@@ -27,3 +27,11 @@ upgrade: ## update the requirements/*.txt files with the latest packages satisfy
 quality: clean ## check coding style with pycodestyle and pylint
 	pycodestyle ./openedx_external_enrollments
 	pylint ./openedx_external_enrollments --rcfile=./setup.cfg
+	isort --check-only --recursive --diff ./openedx_external_enrollments
+
+test_python: clean ## Run test suite.
+	pip install -r requirements/test.txt --exists-action w
+	coverage run --source ./openedx_external_enrollments manage.py test
+	coverage report -m --fail-under=83
+
+validate_python: test_python quality
