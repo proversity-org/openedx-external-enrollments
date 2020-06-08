@@ -46,6 +46,8 @@ def plugin_settings(settings):
     settings.OEE_COURSE_HOME_MODULE = 'openedx_external_enrollments.edxapp_wrapper.backends.course_home_i_v1'
     settings.OEE_COURSE_HOME_CALCULATOR = \
         'openedx_external_enrollments.edxapp_wrapper.get_course_home.calculate_course_home'
+    settings.OEE_SITE_CONFIGURATION_BACKEND = \
+        'openedx_external_enrollments.edxapp_wrapper.backends.site_configuration_module_i_v1'
     settings.OEE_STUDENT_BACKEND = 'openedx_external_enrollments.edxapp_wrapper.backends.student_i_v1'
     settings.EDX_ENTERPRISE_API_CLIENT_ID = "client-id"
     settings.EDX_ENTERPRISE_API_CLIENT_SECRET = "client-secret"

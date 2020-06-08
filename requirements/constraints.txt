@@ -28,9 +28,6 @@ futures; python_version == "2.7"
 jsonfield==2.0.2
 
 # Keep same platform version
-mock==1.0.1
-
-# Keep same platform version
 oauthlib==2.1.0
 
 # Keep same platform version
