@@ -11,3 +11,7 @@ class JwtAuthentication(object):
 
 def get_course_enrollment_backend():
     """Test get_course_enrollment_backend method."""
+
+
+def get_configuration_helpers():
+    """Test get_configuration_helpers method."""
