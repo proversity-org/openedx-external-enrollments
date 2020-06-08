@@ -51,6 +51,14 @@ class EdxEnterpriseExternalEnrollmentTest(TestCase):
             [expected_data],
         )
 
+        data['is_active'] = False
+        expected_data['is_active'] = False
+
+        self.assertEqual(
+            self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
+            [expected_data],
+        )
+
         expected_data = {key: None for key in expected_data}
         expected_data['is_active'] = True
 

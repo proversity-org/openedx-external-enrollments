@@ -30,7 +30,7 @@ class EdxInstanceExternalEnrollment(BaseExternalEnrollment):
         user, _ = get_user(email=data.get("user_email"))
         return {
             "user": user.username,
-            "is_active": True,
+            "is_active": data.get("is_active", True),
             "mode": course_settings.get(
                 "external_enrollment_mode_override",
                 data.get("course_mode")
